@@ -1,0 +1,122 @@
+ollama runs on: http://localhost:11434/ 
+http://127.0.0.1:11434
+
+
+https://docs.openwebui.com/getting-started/
+
+
+Pulling a model: 
+ollama pull llama3:8b
+
+Running a model:
+ollama run llama3
+
+/bye to exit the console.
+
+## wsl setups: 
+
+Set WSL 2 as Default:
+
+wsl --set-default-version 2
+
+wsl -l -v // view all 
+wsl --terminate Ubuntu // shut down: don't do.. docker use this
+
+Start the Specific WSL Instance:
+
+Use the wsl -d <distribution-name> command to start the desired WSL instance. For example, for Ubuntu:
+
+wsl -d Ubuntu
+
+### Optimize (shrink) WSL 2 .vhdx
+## Must be run in PowerShell as Administrator user
+# DistroFolder found at: $env:LOCALAPPDATA\Packages\
+# Examples:
+#   CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc
+#   CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc
+
+cd $env:LOCALAPPDATA\Packages\REPLACE_ME_WITH_TARGET_DISTRO_FOLDERNAME\LocalState\
+wsl --shutdown
+optimize-vhd -Path .\ext4.vhdx -Mode full
+
+
+## Main
+Docker :
+docker run -d -p 3000:8080 --gpus all --add-host=host.docker.internal:host-gateway -v D:\open-webui:/app/backend/data -v open-webui-backup:/app/backend/backup --name open-webui --restart always ghcr.io/open-webui/open-webui:cuda
+
+Vdisk Space Management: 
+C:\Users\shadm\AppData\Local\Docker\wsl\data
+wsl --shutdown
+wsl.exe --list --verbose
+diskpart
+select vdisk file="C:\Users\shadm\AppData\Local\Docker\wsl\data\ext4.vhdx"
+compact vdisk
+
+### 
+docker system prune -a
+
+
+## Local setup:
+git clone https://github.com/open-webui/open-webui.git
+cd open-webui/
+
+conda create --prefix ./openwebui python=3.10
+conda activate ./openwebui
+Installing nodejs in conda:
+conda install conda-forge::nodejs
+
+
+
+
+# Copying required .env file
+cp -RPp .env.example .env
+
+# Building Frontend Using Node
+npm i
+npm run build
+
+# Serving Frontend with the Backend
+cd ./backend
+pip install -r requirements.txt -U
+bash start.sh
+# windos 
+start_windows.bat --listen --use-zluda ## in powershell  .\start_windows.bat --listen --use-zluda
+
+
+### Creating a local bat file for opening with double click:
+@echo off
+
+REM Change directory to the open-webui folder
+cd open-webui
+if %ERRORLEVEL% neq 0 (
+    echo Failed to change directory to open-webui.
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+REM Activate the Conda environment
+call conda activate ./openwebui
+if %ERRORLEVEL% neq 0 (
+    echo Failed to activate Conda environment.
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+REM Change directory to the backend folder
+cd backend
+if %ERRORLEVEL% neq 0 (
+    echo Failed to change directory to backend.
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+REM Start the backend
+start start_windows.bat --listen --use-zluda
+if %ERRORLEVEL% neq 0 (
+    echo Failed to start backend.
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+REM Open the web browser to localhost:8080
+start http://localhost:8080
